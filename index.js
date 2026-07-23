@@ -291,8 +291,8 @@ function buildGenerationPrompt(snapshot, template, preset, directives, temporary
     const directiveText = directives.length
         ? directives.map((item, index) => `${index + 1}. ${item.text}`).join('\n')
         : '无';
-    const presetText = preset?.instructions?.trim() || '无';
-    const commandText = temporaryCommand.trim() || '按固定指令和预设完成角色适配。';
+    const presetText = preset?.instructions?.trim() || '未选择（风格预设为可选项）';
+    const commandText = temporaryCommand.trim() || '结合参考美化和已启用的固定指令完成角色适配。';
 
     const cardData = {
         name: snapshot.name,
@@ -550,7 +550,7 @@ function panelMarkup() {
         <div class="rcra-modal">
             <div class="rcra-header">
                 <div>
-                    <div class="rcra-title"><i class="fa-solid fa-wand-magic-sparkles"></i> 角色卡正则美化助手</div>
+                    <div class="rcra-title">角色卡正则美化助手</div>
                     <div class="rcra-subtitle">角色卡只读 · 参考正则作母版 · 指令可固定 · 结果确认后保存</div>
                 </div>
                 <button class="menu_button rcra-close" type="button" title="关闭">
@@ -558,91 +558,139 @@ function panelMarkup() {
                 </button>
             </div>
 
+            <nav class="rcra-stepbar" aria-label="制作流程">
+                <button class="rcra-step rcra-step-active" type="button" data-target="rcra-card-section">
+                    <span>1</span> 当前角色
+                </button>
+                <button class="rcra-step" type="button" data-target="rcra-template-section">
+                    <span>2</span> 参考美化
+                </button>
+                <button class="rcra-step" type="button" data-target="rcra-directives-section">
+                    <span>3</span> 固定指令
+                </button>
+                <button class="rcra-step" type="button" data-target="rcra-preset-section">
+                    <span>4</span> 风格预设
+                </button>
+                <button class="rcra-step" type="button" data-target="rcra-command-section">
+                    <span>5</span> 本次命令
+                </button>
+                <button class="rcra-step" type="button" data-target="rcra-result-section">
+                    <span>6</span> 生成结果
+                </button>
+            </nav>
+
             <div class="rcra-body">
-                <section class="rcra-section">
+                <div class="rcra-workspace">
+                    <div class="rcra-column">
+                        <section id="rcra-card-section" class="rcra-section">
+                            <div class="rcra-section-head">
+                                <h3><i class="fa-solid fa-circle-user"></i> 当前角色卡 <small>只读</small></h3>
+                                <button class="menu_button rcra-refresh-card rcra-icon-action" type="button" title="重新读取当前角色">
+                                    <i class="fa-solid fa-rotate"></i><span>重新读取</span>
+                                </button>
+                            </div>
+                            <div class="rcra-card-summary">${getCardSummaryHtml(uiState.cardSnapshot)}</div>
+                        </section>
+
+                        <section id="rcra-template-section" class="rcra-section">
+                            <div class="rcra-section-head">
+                                <h3><i class="fa-solid fa-wand-magic-sparkles"></i> 参考美化</h3>
+                            </div>
+                            <label class="rcra-field-label" for="rcra-template-select">已保存的参考正则</label>
+                            <select id="rcra-template-select" class="text_pole">${templateOptionsHtml(settings)}</select>
+                            <div class="rcra-muted">用于参考结构与风格，不会直接覆盖当前角色内容。</div>
+                            <div class="rcra-button-row rcra-template-actions">
+                                <button class="menu_button rcra-import-template" type="button">
+                                    <i class="fa-solid fa-file-import"></i> 导入正则
+                                </button>
+                                <input id="rcra-template-file" type="file" accept=".json,application/json" hidden>
+                                <button class="menu_button rcra-use-current-regex rcra-primary" type="button">
+                                    <i class="fa-solid fa-bookmark"></i> 保存为母版
+                                </button>
+                            </div>
+                            <div class="rcra-current-template-row">
+                                <select id="rcra-current-regex-source" class="text_pole">${currentRegexOptionsHtml()}</select>
+                                <button class="menu_button rcra-delete-template rcra-danger-action" type="button" ${getActiveTemplate() ? '' : 'disabled'}>
+                                    <i class="fa-solid fa-trash-can"></i> 删除母版
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div class="rcra-column">
+                        <section id="rcra-directives-section" class="rcra-section">
+                            <div class="rcra-section-head">
+                                <h3><i class="fa-solid fa-shield-halved"></i> 固定指令 <small>固定生效</small></h3>
+                                <button class="menu_button rcra-export-directives rcra-icon-action" type="button" ${settings.directives.length ? '' : 'disabled'} title="导出全部固定条目">
+                                    <i class="fa-solid fa-file-export"></i><span>导出条目</span>
+                                </button>
+                            </div>
+                            <div id="rcra-directive-list">${directiveRowsHtml(settings)}</div>
+                            <textarea id="rcra-new-directive" class="text_pole rcra-new-directive" rows="2" placeholder="例如：保持角色人设稳定；使用第三人称叙述；一句话介绍不超过30字。"></textarea>
+                            <div class="rcra-button-row rcra-split-actions">
+                                <button class="menu_button rcra-add-directive" type="button">
+                                    <i class="fa-solid fa-plus"></i> 添加条目
+                                </button>
+                                <button class="menu_button rcra-import-directives" type="button">
+                                    <i class="fa-solid fa-file-import"></i> 导入条目
+                                </button>
+                                <input id="rcra-directives-file" type="file" accept=".json,application/json" hidden>
+                            </div>
+                            <div class="rcra-muted"><i class="fa-regular fa-circle-info"></i> 导入预设后仍可继续添加、修改或关闭固定指令。</div>
+                        </section>
+
+                        <section id="rcra-preset-section" class="rcra-section">
+                            <div class="rcra-section-head">
+                                <h3><i class="fa-solid fa-fan"></i> 风格预设 <small>可选</small></h3>
+                            </div>
+                            <select id="rcra-preset-select" class="text_pole">${presetOptionsHtml(settings)}</select>
+                            <div class="rcra-muted">无需选择预设也可以生成。</div>
+                            <div class="rcra-preset-editor">
+                                <input id="rcra-preset-name" class="text_pole" value="${escapeHtml(uiState.presetNameDraft)}" placeholder="预设名称，例如：简洁开场跳转">
+                                <textarea id="rcra-preset-text" class="text_pole" rows="4" placeholder="输入这套预设长期使用的风格、文字、长度和布局要求。">${escapeHtml(uiState.presetTextDraft)}</textarea>
+                            </div>
+                            <div class="rcra-button-row">
+                                <button class="menu_button rcra-import-preset" type="button">
+                                    <i class="fa-solid fa-file-import"></i> 导入预设
+                                </button>
+                                <input id="rcra-preset-file" type="file" accept=".json,application/json" hidden>
+                                <button class="menu_button rcra-save-preset rcra-primary" type="button">
+                                    <i class="fa-solid fa-circle-plus"></i> ${preset ? '更新预设' : '新建预设'}
+                                </button>
+                                <button class="menu_button rcra-export-preset" type="button" ${preset ? '' : 'disabled'}>
+                                    <i class="fa-solid fa-file-export"></i> 导出预设
+                                </button>
+                                <button class="menu_button rcra-delete-preset rcra-danger-action" type="button" ${preset ? '' : 'disabled'}>
+                                    <i class="fa-solid fa-trash-can"></i> 删除预设
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <section id="rcra-command-section" class="rcra-section rcra-command-section">
                     <div class="rcra-section-head">
-                        <h3>1. 当前角色卡</h3>
-                        <button class="menu_button rcra-refresh-card" type="button">
-                            <i class="fa-solid fa-rotate"></i> 重新读取
-                        </button>
+                        <h3><i class="fa-regular fa-pen-to-square"></i> 本次命令 <small>将发送给 AI 生成</small></h3>
                     </div>
-                    <div class="rcra-card-summary">${getCardSummaryHtml(uiState.cardSnapshot)}</div>
+                    <div class="rcra-command-layout">
+                        <div class="rcra-command-input">
+                            <textarea id="rcra-temporary-command" class="text_pole" rows="5" maxlength="2000" placeholder="在此输入本次的额外要求、细节补充或修改方向……">${escapeHtml(uiState.temporaryCommand || settings.lastCommand)}</textarea>
+                            <span class="rcra-counter">${(uiState.temporaryCommand || settings.lastCommand).length} / 2000</span>
+                        </div>
+                        <div class="rcra-generate-wrap">
+                            <button class="menu_button rcra-generate rcra-primary" type="button" ${uiState.generating ? 'disabled' : ''}>
+                                <i class="fa-solid ${uiState.generating ? 'fa-spinner fa-spin' : 'fa-paper-plane'}"></i>
+                                ${uiState.generating ? '正在生成…' : '发送给 AI 生成'}
+                            </button>
+                            <div class="rcra-muted">生成结果将在下一步查看与确认</div>
+                        </div>
+                    </div>
                 </section>
 
-                <section class="rcra-section">
-                    <div class="rcra-section-head"><h3>2. 参考美化母版</h3></div>
-                    <div class="rcra-grid-row">
-                        <label>已保存的参考正则</label>
-                        <select id="rcra-template-select" class="text_pole">${templateOptionsHtml(settings)}</select>
-                    </div>
-                    <div class="rcra-button-row">
-                        <button class="menu_button rcra-import-template" type="button">
-                            <i class="fa-solid fa-file-import"></i> 导入正则 JSON
-                        </button>
-                        <input id="rcra-template-file" type="file" accept=".json,application/json" hidden>
-                        <select id="rcra-current-regex-source" class="text_pole">${currentRegexOptionsHtml()}</select>
-                        <button class="menu_button rcra-use-current-regex" type="button">
-                            <i class="fa-solid fa-bookmark"></i> 将当前角色正则存为母版
-                        </button>
-                        <button class="menu_button rcra-delete-template" type="button" ${getActiveTemplate() ? '' : 'disabled'}>
-                            <i class="fa-solid fa-trash-can"></i> 删除母版
-                        </button>
-                    </div>
-                    <div class="rcra-muted">这里的正则只决定参考风格和交互，不会被当成当前角色内容照搬。</div>
-                </section>
-
-                <section class="rcra-section">
+                <section id="rcra-result-section" class="rcra-section rcra-result-section">
                     <div class="rcra-section-head">
-                        <h3>3. 每次都发送的固定指令</h3>
-                        <button class="menu_button rcra-export-directives" type="button" ${settings.directives.length ? '' : 'disabled'}>
-                            <i class="fa-solid fa-file-export"></i> 导出条目
-                        </button>
+                        <h3><i class="fa-regular fa-file-code"></i> 生成结果</h3>
                     </div>
-                    <div id="rcra-directive-list">${directiveRowsHtml(settings)}</div>
-                    <div class="rcra-add-row">
-                        <textarea id="rcra-new-directive" class="text_pole" rows="2" placeholder="例如：总体风格保持母版不变；一句话介绍不超过30字；只允许小范围布局调整。"></textarea>
-                        <button class="menu_button rcra-add-directive" type="button">
-                            <i class="fa-solid fa-plus"></i> 添加条目
-                        </button>
-                    </div>
-                </section>
-
-                <section class="rcra-section">
-                    <div class="rcra-section-head"><h3>4. 风格/命令预设</h3></div>
-                    <div class="rcra-grid-row">
-                        <label>当前预设</label>
-                        <select id="rcra-preset-select" class="text_pole">${presetOptionsHtml(settings)}</select>
-                    </div>
-                    <input id="rcra-preset-name" class="text_pole" value="${escapeHtml(uiState.presetNameDraft)}" placeholder="预设名称，例如：简洁开场跳转">
-                    <textarea id="rcra-preset-text" class="text_pole" rows="5" placeholder="输入这套预设长期使用的风格、文字、长度和布局要求。">${escapeHtml(uiState.presetTextDraft)}</textarea>
-                    <div class="rcra-button-row">
-                        <button class="menu_button rcra-save-preset" type="button">
-                            <i class="fa-solid fa-floppy-disk"></i> 保存为预设
-                        </button>
-                        <button class="menu_button rcra-delete-preset" type="button" ${preset ? '' : 'disabled'}>
-                            <i class="fa-solid fa-trash-can"></i> 删除预设
-                        </button>
-                        <button class="menu_button rcra-export-preset" type="button" ${preset ? '' : 'disabled'}>
-                            <i class="fa-solid fa-file-export"></i> 导出预设
-                        </button>
-                        <button class="menu_button rcra-import-config" type="button">
-                            <i class="fa-solid fa-file-import"></i> 导入预设/条目
-                        </button>
-                        <input id="rcra-config-file" type="file" accept=".json,application/json" hidden>
-                    </div>
-                </section>
-
-                <section class="rcra-section rcra-command-section">
-                    <div class="rcra-section-head"><h3>5. 本次临时命令</h3></div>
-                    <textarea id="rcra-temporary-command" class="text_pole" rows="6" placeholder="例如：读取当前角色的开场白，总结一句不超过25字的介绍；保留参考母版的整体风格和交互，把三个标签改成符合角色身份的称呼，卡片宽度略微缩小。">${escapeHtml(uiState.temporaryCommand || settings.lastCommand)}</textarea>
-                    <button class="menu_button rcra-generate" type="button" ${uiState.generating ? 'disabled' : ''}>
-                        <i class="fa-solid ${uiState.generating ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles'}"></i>
-                        ${uiState.generating ? '正在生成…' : '发送给 AI 并生成正则'}
-                    </button>
-                </section>
-
-                <section class="rcra-section">
-                    <div class="rcra-section-head"><h3>6. 生成结果</h3></div>
                     <div class="rcra-status">${escapeHtml(uiState.statusText)}</div>
                     <textarea id="rcra-result" class="text_pole rcra-result" rows="18" placeholder="AI生成的完整正则 JSON 会出现在这里；你可以先手动修改，再保存。">${escapeHtml(uiState.resultText)}</textarea>
                     <div class="rcra-grid-row">
@@ -809,6 +857,46 @@ function bindPanelEvents(overlay) {
         downloadText('角色卡正则美化-固定指令.json', JSON.stringify(payload, null, 2));
     });
 
+    const directivesFile = overlay.querySelector('#rcra-directives-file');
+    overlay.querySelector('.rcra-import-directives')?.addEventListener('click', () => directivesFile?.click());
+    directivesFile?.addEventListener('change', async () => {
+        try {
+            const file = directivesFile.files?.[0];
+            if (!file) return;
+            const payload = JSON.parse(await file.text());
+            let items = [];
+
+            if (payload?.format === CONFIG_FORMAT && payload?.type === 'directives' && Array.isArray(payload.directives)) {
+                items = payload.directives;
+            } else if (Array.isArray(payload)) {
+                items = payload;
+            } else if (payload && Array.isArray(payload.directives)) {
+                items = payload.directives;
+            } else {
+                throw new Error('这不是固定指令条目文件。');
+            }
+
+            const directives = items
+                .map(item => ({
+                    text: String(typeof item === 'string' ? item : item?.text || '').trim(),
+                    enabled: typeof item === 'object' && item !== null ? item.enabled !== false : true,
+                }))
+                .filter(item => item.text);
+            if (!directives.length) throw new Error('没有找到可导入的固定指令条目。');
+
+            getSettings().directives.push(...directives.map(item => ({
+                id: uuidv4(),
+                text: item.text,
+                enabled: item.enabled,
+            })));
+            persistSettings();
+            notify('success', `已导入 ${directives.length} 个固定指令条目。`);
+            renderOpenPanel();
+        } catch (error) {
+            notify('error', `导入条目失败：${error.message}`);
+        }
+    });
+
     const presetSelect = overlay.querySelector('#rcra-preset-select');
     presetSelect?.addEventListener('change', () => {
         const settings = getSettings();
@@ -873,64 +961,58 @@ function bindPanelEvents(overlay) {
         downloadText(`${preset.name || '正则美化预设'}.json`, JSON.stringify(payload, null, 2));
     });
 
-    const configFile = overlay.querySelector('#rcra-config-file');
-    overlay.querySelector('.rcra-import-config')?.addEventListener('click', () => configFile?.click());
-    configFile?.addEventListener('change', async () => {
+    const presetFile = overlay.querySelector('#rcra-preset-file');
+    overlay.querySelector('.rcra-import-preset')?.addEventListener('click', () => presetFile?.click());
+    presetFile?.addEventListener('change', async () => {
         try {
-            const file = configFile.files?.[0];
+            const file = presetFile.files?.[0];
             if (!file) return;
             const payload = JSON.parse(await file.text());
             const settings = getSettings();
+            let imported;
 
             if (payload?.format === CONFIG_FORMAT && payload?.type === 'preset' && payload.preset) {
-                const imported = {
+                imported = {
                     id: uuidv4(),
                     name: String(payload.preset.name || file.name.replace(/\.json$/i, '')),
                     instructions: String(payload.preset.instructions || ''),
                     createdAt: new Date().toISOString(),
                 };
-                if (!imported.instructions.trim()) throw new Error('预设内容为空。');
-                settings.presets.push(imported);
-                settings.activePresetId = imported.id;
             } else if (payload && typeof payload.name === 'string' && typeof payload.instructions === 'string') {
-                const imported = {
+                imported = {
                     id: uuidv4(),
                     name: payload.name.trim() || file.name.replace(/\.json$/i, ''),
                     instructions: payload.instructions,
                     createdAt: new Date().toISOString(),
                 };
-                if (!imported.instructions.trim()) throw new Error('预设内容为空。');
-                settings.presets.push(imported);
-                settings.activePresetId = imported.id;
-            } else if (Array.isArray(payload)) {
-                const texts = payload
-                    .map(item => typeof item === 'string' ? item : item?.text)
-                    .filter(item => String(item || '').trim());
-                if (texts.length === 0) throw new Error('没有找到可导入的指令条目。');
-                settings.directives.push(...texts.map(text => ({
-                    id: uuidv4(),
-                    text: String(text).trim(),
-                    enabled: true,
-                })));
-            } else if (payload && Array.isArray(payload.directives)) {
-                settings.directives.push(...payload.directives
-                    .map(item => typeof item === 'string' ? item : item?.text)
-                    .filter(item => String(item || '').trim())
-                    .map(text => ({ id: uuidv4(), text: String(text).trim(), enabled: true })));
             } else {
-                throw new Error('不支持的预设或条目文件格式。');
+                throw new Error('这不是风格预设文件；固定指令请使用“导入条目”。');
             }
 
+            if (!imported.instructions.trim()) throw new Error('预设内容为空。');
+            settings.presets.push(imported);
+            settings.activePresetId = imported.id;
+            uiState.presetNameDraft = imported.name;
+            uiState.presetTextDraft = imported.instructions;
             persistSettings();
-            notify('success', '预设或固定条目已导入。');
+            notify('success', `风格预设“${imported.name}”已导入。`);
             renderOpenPanel();
         } catch (error) {
-            notify('error', `导入失败：${error.message}`);
+            notify('error', `导入预设失败：${error.message}`);
         }
+    });
+
+    overlay.querySelectorAll('.rcra-step').forEach(step => {
+        step.addEventListener('click', () => {
+            const target = overlay.querySelector(`#${step.dataset.target}`);
+            target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
     });
 
     overlay.querySelector('#rcra-temporary-command')?.addEventListener('input', event => {
         uiState.temporaryCommand = event.target.value;
+        const counter = overlay.querySelector('.rcra-counter');
+        if (counter) counter.textContent = `${event.target.value.length} / 2000`;
     });
     overlay.querySelector('#rcra-result')?.addEventListener('input', event => {
         uiState.resultText = event.target.value;
