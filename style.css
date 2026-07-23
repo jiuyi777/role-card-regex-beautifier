@@ -377,7 +377,7 @@
     border-radius: 7px;
 }
 
-.rcra-directive-row .menu_button {
+.rcra-directive-row .rcra-delete-directive {
     width: 34px;
     height: 34px;
     min-height: 34px;
@@ -385,6 +385,10 @@
     color: var(--rcra-muted) !important;
     background: transparent !important;
     border-color: transparent !important;
+}
+
+.rcra-delete-directive span {
+    display: none;
 }
 
 .rcra-directive-row textarea {
@@ -409,14 +413,6 @@
     color: #855349;
     background: #f5e9e4;
     border-color: #d8b6ad;
-}
-
-.rcra-preset-editor {
-    display: grid;
-    grid-template-columns: minmax(150px, 0.38fr) minmax(0, 1fr);
-    align-items: stretch;
-    gap: 9px;
-    margin-top: 10px;
 }
 
 .rcra-primary {
@@ -526,9 +522,6 @@
         grid-template-columns: 1fr;
     }
 
-    .rcra-preset-editor {
-        grid-template-columns: 1fr;
-    }
 }
 
 @media screen and (max-width: 720px) {
@@ -626,6 +619,37 @@
 }
 
 @media screen and (max-width: 430px) {
+    .rcra-directive-row {
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-areas:
+            "enabled text"
+            "delete delete";
+        align-items: center;
+    }
+
+    .rcra-directive-enabled {
+        grid-area: enabled;
+    }
+
+    .rcra-directive-text {
+        grid-area: text;
+    }
+
+    .rcra-directive-row .rcra-delete-directive {
+        grid-area: delete;
+        width: 100%;
+        height: 38px;
+        min-height: 38px;
+        margin-top: 2px;
+        color: var(--rcra-danger) !important;
+        background: #f8efeb !important;
+        border-color: #d8bcb5 !important;
+    }
+
+    .rcra-delete-directive span {
+        display: inline;
+    }
+
     .rcra-button-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
