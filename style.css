@@ -46,12 +46,17 @@
 }
 
 .rcra-header {
+    position: relative;
     flex: 0 0 auto;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 18px;
-    padding: 20px 34px 12px;
+    padding: 20px 96px 12px 34px;
+}
+
+.rcra-header > div:first-child {
+    min-width: 0;
 }
 
 .rcra-title {
@@ -114,13 +119,17 @@
 }
 
 .rcra-close {
+    position: absolute;
+    z-index: 3;
+    top: 18px;
+    right: 34px;
     width: 48px !important;
     height: 48px;
     min-height: 48px !important;
     padding: 0 !important;
     color: var(--rcra-ink) !important;
     font-size: 1.5rem;
-    background: transparent !important;
+    background: rgba(255, 255, 255, 0.58) !important;
     border-color: var(--rcra-line) !important;
 }
 
@@ -387,10 +396,6 @@
     border-color: transparent !important;
 }
 
-.rcra-delete-directive span {
-    display: none;
-}
-
 .rcra-directive-row textarea {
     min-height: 42px;
 }
@@ -539,7 +544,7 @@
     }
 
     .rcra-header {
-        padding: 15px 14px 10px;
+        padding: 15px 66px 10px 14px;
     }
 
     .rcra-title {
@@ -551,9 +556,15 @@
     }
 
     .rcra-close {
+        top: 10px;
+        right: 12px;
         width: 42px !important;
         height: 42px;
         min-height: 42px !important;
+        color: var(--rcra-ink) !important;
+        background: var(--rcra-paper-soft) !important;
+        border-color: var(--rcra-line-strong) !important;
+        box-shadow: 0 3px 10px rgba(38, 43, 39, 0.12);
     }
 
     .rcra-stepbar {
@@ -619,37 +630,6 @@
 }
 
 @media screen and (max-width: 430px) {
-    .rcra-directive-row {
-        grid-template-columns: auto minmax(0, 1fr);
-        grid-template-areas:
-            "enabled text"
-            "delete delete";
-        align-items: center;
-    }
-
-    .rcra-directive-enabled {
-        grid-area: enabled;
-    }
-
-    .rcra-directive-text {
-        grid-area: text;
-    }
-
-    .rcra-directive-row .rcra-delete-directive {
-        grid-area: delete;
-        width: 100%;
-        height: 38px;
-        min-height: 38px;
-        margin-top: 2px;
-        color: var(--rcra-danger) !important;
-        background: #f8efeb !important;
-        border-color: #d8bcb5 !important;
-    }
-
-    .rcra-delete-directive span {
-        display: inline;
-    }
-
     .rcra-button-row {
         display: grid;
         grid-template-columns: 1fr 1fr;

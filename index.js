@@ -640,7 +640,7 @@ function directiveRowsHtml(settings) {
             <input class="rcra-directive-enabled" type="checkbox" ${item.enabled ? 'checked' : ''} title="每次生成时发送这条指令">
             <textarea class="rcra-directive-text text_pole" rows="2" placeholder="固定指令">${escapeHtml(item.text)}</textarea>
             <button class="menu_button rcra-delete-directive" type="button" title="删除这条固定指令">
-                <i class="fa-solid fa-trash-can"></i><span>删除</span>
+                <i class="fa-solid fa-trash-can"></i>
             </button>
         </div>
     `).join('');
