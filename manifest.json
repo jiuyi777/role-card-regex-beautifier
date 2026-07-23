@@ -1,0 +1,11 @@
+{
+  "display_name": "角色卡正则美化助手",
+  "loading_order": 20,
+  "requires": [],
+  "dependencies": [],
+  "js": "index.js",
+  "css": "style.css",
+  "author": "@jiuyi0204",
+  "version": "0.1.0",
+  "minimum_client_version": "1.14.0"
+}
